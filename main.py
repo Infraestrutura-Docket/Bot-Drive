@@ -1,5 +1,6 @@
 import os
 import re
+import json
 import time
 from datetime import datetime
 
@@ -27,6 +28,7 @@ MESSAGE_TEXT = (
     "Oiii, tudo bem? 😊\n\n"
     "Estamos verificando o seu ponto e identifiquei lançamentos pendentes.\n"
     "Poderia verificar e, se necessário, realizar os lançamentos?\n\n"
+    "Preciso do ajuste até o final do dia, por gentileza.\n"
     "Lembrando que as batidas pendentes dessa semana deve ser lançada hoje!\n"
     "Se você já ajustou, pode desconsiderar a mensagem, nesse caso, fica pendente apenas a aprovação do seu gestor.\n"
     "Para dúvidas, entre em contato com o time de DP.\n\n"
@@ -42,9 +44,18 @@ EMAIL_REGEX = re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
 # ========================
 
 def drive_service():
-    creds = service_account.Credentials.from_service_account_file(
-        "credentials.json", scopes=SCOPES
+    creds_json = os.getenv("GOOGLE_CREDENTIALS")
+
+    if not creds_json:
+        raise ValueError("GOOGLE_CREDENTIALS não configurado nas variáveis de ambiente")
+
+    creds_dict = json.loads(creds_json)
+
+    creds = service_account.Credentials.from_service_account_info(
+        creds_dict,
+        scopes=SCOPES
     )
+
     return build("drive", "v3", credentials=creds)
 
 
@@ -178,4 +189,4 @@ def run():
 if __name__ == "__main__":
     while True:
         run()
-        time.sleep(60)
+        time.sleep(180)  # 3 minutos
